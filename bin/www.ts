@@ -1,8 +1,14 @@
 #!/usr/bin/env node
+/* eslint-disable import/first */
+/* eslint-disable no-console */
 
 /**
  * Module dependencies.
  */
+
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 import debugInit from 'debug'
 import * as http from 'http'
@@ -12,25 +18,10 @@ import app from '../app'
 const debug = debugInit('server:server')
 
 /**
- * Get port from environment and store in Express.
- */
-
-const port = normalizePort(process.env.PORT || '3000')
-app.set('port', port)
-
-/**
  * Create HTTP server.
  */
 
 const server = http.createServer(app)
-
-/**
- * Listen on provided port, on all network interfaces.
- */
-
-server.listen(port)
-server.on('error', onError)
-server.on('listening', onListening)
 
 /**
  * Normalize a port into a number, string, or false.
@@ -39,7 +30,7 @@ server.on('listening', onListening)
 function normalizePort(val: string): number | boolean | string {
   const port = parseInt(val, 10)
 
-  if (isNaN(port)) {
+  if (Number.isNaN(port)) {
     // named pipe
     return val
   }
@@ -53,10 +44,17 @@ function normalizePort(val: string): number | boolean | string {
 }
 
 /**
+ * Get port from environment and store in Express.
+ */
+
+const port = normalizePort(process.env.PORT || '3000')
+app.set('port', port)
+
+/**
  * Event listener for HTTP server "error" event.
  */
 
-function onError(error: Error & { syscall: string, code: any }) {
+function onError(error: Error & { syscall: string, code: string }) {
   if (error.syscall !== 'listen') {
     throw error
   }
@@ -91,3 +89,11 @@ function onListening(): void {
     : `port ${String(addr?.port)}`
   debug(`Listening on ${bind}`)
 }
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+server.listen(port)
+server.on('error', onError)
+server.on('listening', onListening)

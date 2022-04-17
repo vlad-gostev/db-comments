@@ -14,13 +14,10 @@ module.exports = {
     "@typescript-eslint"
   ],
   extends: [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended",
-    'plugin:@typescript-eslint/recommended-requiring-type-checking',
+    "airbnb-base",
+    "airbnb-typescript/base"
   ],
   rules: {
-    semi: ['error', 'never'],
-    "@typescript-eslint/no-misused-promises": 0
+    '@typescript-eslint/semi': [2, 'never'],
   },
 }

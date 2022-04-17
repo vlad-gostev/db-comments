@@ -1,19 +1,27 @@
-import express, { Request } from 'express'
+import express from 'express'
 
 import Comment from '../model/Comment'
-import { IComment } from '../types'
 
 const router = express.Router()
 
 /* GET users listing. */
-router.get('/', async (req: Request<null, IComment[], null>, res) => {
+router.get('/', async (req, res) => {
   const users = await Comment.find()
-  res.json(users)
+
+  const usersIds = users.map((item) => item.id)
+  const children = await Comment.find({ parent: { $in: usersIds } })
+  const usersWithChildren = users.map((item) => ({
+    ...item.toObject(),
+    children: children
+      .filter((child) => child.parent?.toString() === item.id)
+      .map((child) => child.toObject()),
+  }))
+  res.json(usersWithChildren)
 })
 
-router.post('/', async (req: Request<null, IComment | Error['message'], IComment>, res) => {
-  const { author, description, parent } = req.body
-  const newComment = new Comment({ author, description, parent: parent || null })
+router.post('/', async (req, res) => {
+  const { description, userId, parent } = req.body
+  const newComment = new Comment({ description, userId, parent: parent || null })
 
   try {
     const result = await newComment.save()
@@ -28,7 +36,7 @@ router.post('/', async (req: Request<null, IComment | Error['message'], IComment
   }
 })
 
-router.patch('/:commentId/vote/increase', async (req: Request<{ commentId: string }, IComment | Error['message'], null>, res) => {
+router.patch('/:commentId/vote/increase', async (req, res) => {
   try {
     const { commentId } = req.params
     const comment = await Comment.findById(commentId)
@@ -45,7 +53,7 @@ router.patch('/:commentId/vote/increase', async (req: Request<{ commentId: strin
   }
 })
 
-router.patch('/:commentId/vote/decrease', async (req: Request<{ commentId: string }, IComment | Error['message'], null>, res) => {
+router.patch('/:commentId/vote/decrease', async (req, res) => {
   try {
     const { commentId } = req.params
     const comment = await Comment.findById(commentId)
@@ -62,7 +70,7 @@ router.patch('/:commentId/vote/decrease', async (req: Request<{ commentId: strin
   }
 })
 
-router.delete('/:commentId', async (req: Request<{ commentId: string }, string | Error['message'], null>, res) => {
+router.delete('/:commentId', async (req, res) => {
   try {
     const { commentId } = req.params
     const comment = await Comment.findByIdAndDelete(commentId)
@@ -77,7 +85,7 @@ router.delete('/:commentId', async (req: Request<{ commentId: string }, string |
   }
 })
 
-router.patch('/:commentId', async (req: Request<{ commentId: string }, IComment | Error['message'], IComment>, res) => {
+router.patch('/:commentId', async (req, res) => {
   try {
     const { commentId } = req.params
     const { description } = req.body

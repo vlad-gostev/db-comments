@@ -2,27 +2,14 @@ import express from 'express'
 import path from 'path'
 import cookieParser from 'cookie-parser'
 import logger from 'morgan'
-import mongoose, { CallbackError } from 'mongoose'
 
+import ClientDB from './config/database'
 import indexRouter from './routes/index'
 import commentsRouter from './routes/comments'
+import authRouter from './routes/auth'
+import verifyToken from './middleware/auth'
 
-let DBConnectionError = false
-
-const connectDB = () => {
-  console.log('Mongodb is trying to connect')
-  mongoose.connect('mongodb://localhost:27017/sigma', (error: CallbackError) => {
-    if (error) {
-      console.log(`Mongodb error: ${error.message}`)
-      DBConnectionError = true
-      return setTimeout(connectDB, 5000)
-    }
-    DBConnectionError = false
-    console.log('Mongodb server runned succesfully')
-  })
-}
-
-connectDB()
+ClientDB.connect()
 
 const initApp = express()
 
@@ -33,6 +20,7 @@ initApp.use(cookieParser())
 initApp.use(express.static(path.join(__dirname, 'public')))
 
 initApp.use('/', indexRouter)
-initApp.use('/comments', commentsRouter)
+initApp.use('/auth', authRouter)
+initApp.use('/comments', verifyToken, commentsRouter)
 
 export default initApp

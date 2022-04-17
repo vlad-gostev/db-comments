@@ -1,12 +1,12 @@
-import mongoose from "mongoose"
+import { Schema } from 'mongoose'
 
-import { IComment } from "../types"
+import { IComment } from '../types'
 
-const commentSchema = new mongoose.Schema<IComment>({
-  author: { type: String, required: true },
+const commentSchema = new Schema<IComment>({
   description: { type: String, required: true },
-  vote: Number,
-  parent: String,
+  vote: { type: Number, default: 0 },
+  parent: { type: Schema.Types.ObjectId, ref: 'Comment' },
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
 })
 
 export default commentSchema
