@@ -1,26 +1,33 @@
-import express from 'express'
+import express, { ErrorRequestHandler } from 'express'
 import path from 'path'
 import cookieParser from 'cookie-parser'
 import logger from 'morgan'
+import cors from 'cors'
 
 import ClientDB from './config/database'
 import indexRouter from './routes/index'
 import commentsRouter from './routes/comments'
 import authRouter from './routes/auth'
-import verifyToken from './middleware/auth'
 
 ClientDB.connect()
 
-const initApp = express()
+const app = express()
 
-initApp.use(logger('dev'))
-initApp.use(express.json())
-initApp.use(express.urlencoded({ extended: false }))
-initApp.use(cookieParser())
-initApp.use(express.static(path.join(__dirname, 'public')))
+app.use(cors())
+app.use(logger('dev'))
+app.use(express.json())
+app.use(express.urlencoded({ extended: false }))
+app.use(cookieParser())
+app.use(express.static(path.join(__dirname, 'public')))
 
-initApp.use('/', indexRouter)
-initApp.use('/auth', authRouter)
-initApp.use('/comments', verifyToken, commentsRouter)
+app.use('/', indexRouter)
+app.use('/auth', authRouter)
+app.use('/comments', commentsRouter)
 
-export default initApp
+// const jsonErrorHandler: ErrorRequestHandler = (err, req, res) => {
+//   res.status(500).json({ error: err })
+// }
+
+// app.use(jsonErrorHandler)
+
+export default app

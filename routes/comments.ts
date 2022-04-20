@@ -1,12 +1,14 @@
 import express from 'express'
 
 import Comment from '../model/Comment'
+import verifyToken from '../middleware/auth'
+import Vote from '../model/Vote'
+import { VoteType } from '../types'
 
 const router = express.Router()
 
-/* GET users listing. */
 router.get('/', async (req, res) => {
-  const users = await Comment.find()
+  const users = await Comment.find().populate('user')
 
   const usersIds = users.map((item) => item.id)
   const children = await Comment.find({ parent: { $in: usersIds } })
@@ -16,12 +18,21 @@ router.get('/', async (req, res) => {
       .filter((child) => child.parent?.toString() === item.id)
       .map((child) => child.toObject()),
   }))
+
   res.json(usersWithChildren)
 })
 
-router.post('/', async (req, res) => {
-  const { description, userId, parent } = req.body
-  const newComment = new Comment({ description, userId, parent: parent || null })
+router.post('/', verifyToken, async (req, res, next) => {
+  const {
+    description, parent, decodedUser,
+  } = req.body
+
+  const newComment = new Comment({
+    description,
+    user: decodedUser.userId,
+    parent: parent || null,
+    modificationDate: new Date(),
+  })
 
   try {
     const result = await newComment.save()
@@ -30,74 +41,90 @@ router.post('/', async (req, res) => {
     const { message, name } = error as Error
     if (name === 'ValidationError') {
       res.status(402).json(message)
-      return
     }
-    res.status(500).json(message)
+    next(error)
   }
 })
 
-router.patch('/:commentId/vote/increase', async (req, res) => {
-  try {
-    const { commentId } = req.params
-    const comment = await Comment.findById(commentId)
-    if (comment) {
-      comment.vote = (comment.vote || 0) + 1
-      await comment.save()
-      res.json(comment)
+router.post('/:commentId/vote/increase', verifyToken, async (req, res) => {
+  const { decodedUser } = req.body
+  const { commentId } = req.params
+  const vote = await Vote.findOne({
+    comment: commentId,
+    user: decodedUser.userId,
+  })
+
+  if (vote) {
+    if (vote.type === VoteType.INCREASE) {
+      vote.type = VoteType.NULL
     } else {
-      res.status(404).json('There is no such comment')
+      vote.type = VoteType.INCREASE
     }
-  } catch (error) {
-    const { message } = error as Error
-    res.status(500).json(message)
+
+    const result = await vote.save()
+    res.json(result)
+  } else {
+    const newVote = new Vote({
+      comment: commentId,
+      user: decodedUser.userId,
+      type: VoteType.INCREASE,
+    })
+
+    const result = await newVote.save()
+    res.json(result)
   }
 })
 
-router.patch('/:commentId/vote/decrease', async (req, res) => {
-  try {
-    const { commentId } = req.params
-    const comment = await Comment.findById(commentId)
-    if (comment) {
-      comment.vote = (comment.vote || 0) - 1
-      await comment.save()
-      res.json(comment)
+router.post('/:commentId/vote/decrease', verifyToken, async (req, res) => {
+  const { decodedUser } = req.body
+  const { commentId } = req.params
+  const vote = await Vote.findOne({
+    comment: commentId,
+    user: decodedUser.userId,
+  })
+
+  if (vote) {
+    if (vote.type === VoteType.DECREASE) {
+      vote.type = VoteType.NULL
     } else {
-      res.status(404).json('There is no such comment')
+      vote.type = VoteType.DECREASE
     }
-  } catch (error) {
-    const { message } = error as Error
-    res.status(500).json(message)
+
+    const result = await vote.save()
+    res.json(result)
+  } else {
+    const newVote = new Vote({
+      comment: commentId,
+      user: decodedUser.userId,
+      type: VoteType.DECREASE,
+    })
+
+    const result = await newVote.save()
+    res.json(result)
   }
 })
 
-router.delete('/:commentId', async (req, res) => {
-  try {
-    const { commentId } = req.params
-    const comment = await Comment.findByIdAndDelete(commentId)
-    if (comment) {
-      res.json(String(comment.id))
-    } else {
-      res.status(404).json('There is no such comment')
-    }
-  } catch (error) {
-    const { message } = error as Error
-    res.status(500).json(message)
+router.delete('/:commentId', verifyToken, async (req, res) => {
+  const { commentId } = req.params
+  const comment = await Comment.findByIdAndDelete(commentId)
+  if (comment) {
+    res.json(String(comment.id))
+  } else {
+    res.status(404).json('There is no such comment')
   }
 })
 
-router.patch('/:commentId', async (req, res) => {
-  try {
-    const { commentId } = req.params
-    const { description } = req.body
-    const comment = await Comment.findByIdAndUpdate(commentId, { description }, { new: true })
-    if (comment) {
-      res.json(comment)
-    } else {
-      res.status(404).json('There is no such comment')
-    }
-  } catch (error) {
-    const { message } = error as Error
-    res.status(500).json(message)
+router.patch('/:commentId', verifyToken, async (req, res) => {
+  const { commentId } = req.params
+  const { description } = req.body
+  const comment = await Comment.findByIdAndUpdate(commentId, {
+    description,
+    modificationDate: new Date(),
+  }, { new: true })
+  if (comment) {
+    res.json(comment)
+  } else {
+    res.status(404).json('There is no such comment')
   }
 })
 
