@@ -3,5 +3,5 @@ export interface IComment {
   vote?: number
   parent?: string
   user: string
-  modificationDate: string
+  modificationDate: Date
 }

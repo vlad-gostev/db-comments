@@ -1,4 +1,4 @@
-import express, { ErrorRequestHandler } from 'express'
+import express from 'express'
 import path from 'path'
 import cookieParser from 'cookie-parser'
 import logger from 'morgan'
@@ -6,7 +6,7 @@ import cors from 'cors'
 
 import ClientDB from './config/database'
 import indexRouter from './routes/index'
-import commentsRouter from './routes/comments'
+import commentsRouter from './routes/comment'
 import authRouter from './routes/auth'
 
 ClientDB.connect()

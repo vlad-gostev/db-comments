@@ -19,5 +19,7 @@ module.exports = {
   ],
   rules: {
     '@typescript-eslint/semi': [2, 'never'],
+    'no-underscore-dangle': 'off',
+    'class-methods-use-this': 'off'
   },
 }

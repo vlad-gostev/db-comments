@@ -8,7 +8,6 @@ const voteSchema = new Schema<IVote>({
     type: Schema.Types.ObjectId,
     ref: 'Comment',
     required: true,
-    unique: true,
   },
   type: { type: String, required: true },
 })
