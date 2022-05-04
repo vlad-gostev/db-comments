@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "ts-node ./bin/www.ts",
+    "start": "npm install && ts-node ./bin/www.ts",
     "dev": "nodemon ./bin/www.ts"
   },
   "dependencies": {
