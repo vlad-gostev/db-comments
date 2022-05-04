@@ -1,3 +1,5 @@
+import mongoose from 'mongoose'
+
 import User from '../model/User'
 import Vote from '../model/Vote'
 import Comment from '../model/Comment'
@@ -123,8 +125,19 @@ class CommentRepository extends Repository {
   }
 
   delete = async ({ commentId }: DeleteData) => {
-    const data = await Comment.findByIdAndDelete(commentId)
-    return data
+    const session = await mongoose.startSession()
+
+    try {
+      let data = null
+      await session.withTransaction(async () => {
+        data = await Comment.findByIdAndDelete(commentId, { session })
+        // await session.abortTransaction()
+      })
+
+      return data
+    } finally {
+      session.endSession()
+    }
   }
 
   update = async ({ commentId, description, modificationDate }: UpdateData) => {
