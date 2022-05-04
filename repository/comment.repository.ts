@@ -125,19 +125,19 @@ class CommentRepository extends Repository {
   }
 
   delete = async ({ commentId }: DeleteData) => {
-    const session = await mongoose.startSession()
+    // const session = await mongoose.startSession()
 
-    try {
-      let data = null
-      await session.withTransaction(async () => {
-        data = await Comment.findByIdAndDelete(commentId, { session })
-        // await session.abortTransaction()
-      })
+    // try {
+    //   let data = null
+    //   await session.withTransaction(async () => {
+    const data = await Comment.findByIdAndDelete(commentId)
+    // await session.abortTransaction()
+    // })
 
-      return data
-    } finally {
-      session.endSession()
-    }
+    return data
+    // } finally {
+    //   session.endSession()
+    // }
   }
 
   update = async ({ commentId, description, modificationDate }: UpdateData) => {
