@@ -131,6 +131,10 @@ class CommentRepository extends Repository {
     //   let data = null
     //   await session.withTransaction(async () => {
     const data = await Comment.findByIdAndDelete(commentId)
+
+    if (data) {
+      await Comment.deleteMany({ parent: commentId })
+    }
     // await session.abortTransaction()
     // })
 
